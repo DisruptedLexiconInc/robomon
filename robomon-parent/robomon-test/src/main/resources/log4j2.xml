@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <!-- logstash tcp stocket example, replace host value -->
+<!--
+        <Socket name="LogStashSocket" host="logs.hivetechnologies.local" port="4560" protocol="tcp">
+            <LogStashJSONLayout charset="UTF-8">
+                <KeyValuePair key="hostname" value="${sys:hostname}"/>
+                <KeyValuePair key="application_user" value="${sys:user.name}"/>
+            </LogStashJSONLayout>
+        </Socket>
+-->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+        <Console name="Flow">
+            <!-- this pattern outputs class name and line number -->
+            <PatternLayout pattern="%C{1}.%M %m %ex%n"/>
+            <filters>
+                <MarkerFilter marker="FLOW" onMatch="ACCEPT" onMismatch="NEUTRAL"/>
+                <MarkerFilter marker="EXCEPTION" onMatch="ACCEPT" onMismatch="DENY"/>
+            </filters>
+        </Console>
+        <File name="File" fileName="target/robomontest.log">
+            <PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+        </File>
+
+    </Appenders>
+    <Loggers>
+<!--
+        <Logger name="org.jboss.resteasy" level="INFO" additivity="true">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.apache.http.wire" level="DEBUG" additivity="true">
+            <AppenderRef ref="Console"/>
+        </Logger>
+-->
+
+        <Logger name="com.hive" level="trace" additivity="true">
+            <AppenderRef ref="File"/>
+        </Logger>
+        <!--<Logger name="org.hibernate" level="info" additivity="true">
+            <AppenderRef ref="File" />
+            <AppenderRef ref="LogStashSocket" />
+            <AppenderRef ref="json-file" />
+        </Logger>-->
+        <Root level="INFO">
+            <AppenderRef ref="File"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
