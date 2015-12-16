@@ -12,13 +12,14 @@ import com.hive.robomon.event.BattleStartEvent;
 import com.hive.robomon.event.RoundEvent;
 import com.hive.robomon.fighter.Fighter;
 import com.hive.robomon.fighter.FightingType;
+import com.hive.robomon.fighter.impl.SimpleFighter;
 import com.hive.robomon.fighter.impl.SimpleFighterBase;
 
 public class HighlyOffensiveFighter extends SimpleFighterBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HighlyOffensiveFighter.class);
 
-    private Fighter opponent;
+    private SimpleFighter opponent;
 
     protected AtomicBoolean roundOver = new AtomicBoolean(false);
 
@@ -52,7 +53,7 @@ public class HighlyOffensiveFighter extends SimpleFighterBase {
 
     @Override
     public void onBattleStart(BattleStartEvent event) {
-        opponent = event.getFighter1().equals(this) ? event.getFighter2() : event.getFighter1();
+        opponent = event.getFighter1().equals(this) ? (SimpleFighter) event.getFighter2() : (SimpleFighter) event.getFighter1();
         if (!isFightStarted()) {
             setFightStarted(true);
         }
@@ -61,8 +62,6 @@ public class HighlyOffensiveFighter extends SimpleFighterBase {
     @Override
     public void onRoundStart(RoundEvent event) {
         Fighter opponent = (event.getFighter1().equals(this)) ? event.getFighter2() : event.getFighter1();
-
-        LOGGER.trace("About to start pulverizing {} with health {}", opponent.getName(), opponent.getType());
     }
 
 }

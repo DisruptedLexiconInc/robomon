@@ -1,8 +1,8 @@
 package com.hive.robomon.battle;
 
-import com.hive.robomon.fighter.Fighter;
+import com.hive.robomon.fighter.impl.SimpleFighter;
 
 public interface SimpleBattleManager extends BattleManager {
 
-    void hit(Fighter aggressor, Fighter opponent);
+    void hit(SimpleFighter aggressor, SimpleFighter opponent);
 }

@@ -7,4 +7,6 @@ public interface SimpleBattleEventListener {
     void onRoundStart(RoundEvent event);
 
     void onBattleEnd(BattleEndEvent event);
+
+    void onLandedHit(LandedHitEvent event);
 }

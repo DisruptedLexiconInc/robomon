@@ -1,5 +1,6 @@
 package com.hive.robomon.event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hive.robomon.fighter.Fighter;
 
 public class BattleStartEvent {
@@ -42,5 +43,14 @@ public class BattleStartEvent {
 
     public void setTime(long time) {
         this.time = time;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(this);
+        } catch (Exception e) {
+            return super.toString();
+        }
     }
 }

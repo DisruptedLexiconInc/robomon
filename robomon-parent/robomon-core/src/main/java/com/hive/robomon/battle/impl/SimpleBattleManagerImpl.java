@@ -3,6 +3,7 @@ package com.hive.robomon.battle.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hive.robomon.battle.SimpleBattleManager;
 import com.hive.robomon.event.BattleEndEvent;
 import com.hive.robomon.event.BattleStartEvent;
+import com.hive.robomon.event.LandedHitEvent;
 import com.hive.robomon.event.RoundEvent;
 import com.hive.robomon.event.SimpleBattleEventListener;
-import com.hive.robomon.fighter.Fighter;
 import com.hive.robomon.fighter.impl.SimpleFighter;
 
 public class SimpleBattleManagerImpl implements SimpleBattleManager {
@@ -65,16 +66,18 @@ public class SimpleBattleManagerImpl implements SimpleBattleManager {
         initialize();
 
         currentRound = new RoundContext();
+
         long roundStartTime = System.currentTimeMillis();
 
         alertBattleStart();
 
+        int counter = 1;
         while (!fightOver.get()) {
-
+            currentRound.setCounter(counter);
             LOGGER.info("Starting round: at {}", roundStartTime);
             LOGGER.trace("Fighter1: {}\nFighter2: {}", fighter1.toString(), fighter2.toString());
 
-            RoundEvent event = new RoundEvent(fighter1, fighter2);
+            RoundEvent event = new RoundEvent(fighter1, fighter2, counter);
 
             for (SimpleBattleEventListener listener : battleListenerList) {
                 listener.onRoundStart(event);
@@ -88,8 +91,11 @@ public class SimpleBattleManagerImpl implements SimpleBattleManager {
                 LOGGER.trace("RoundComplete?: {}", roundComplete);
             }
 
-            currentRound.reset();
             roundStartTime = System.currentTimeMillis();
+            counter++;
+            currentRound.reset();
+            currentRound.setCounter(counter);
+
         }
 
         alertBattleOver();
@@ -143,13 +149,13 @@ public class SimpleBattleManagerImpl implements SimpleBattleManager {
     }
 
     @Override
-    public synchronized void hit(Fighter aggressor, Fighter opponent) {
+    public synchronized void hit(SimpleFighter aggressor, SimpleFighter opponent) {
         if ((aggressor != opponent) && (aggressor.getHealth() != 0)) {
 
             if (aggressor.equals(fighter1)) {
 
                 if (!currentRound.isFighter1Attacked()) {
-                    LOGGER.debug("{} is hitting {}", aggressor.getName(), opponent.getName());
+                    int origHealth = opponent.getHealth();
 
                     currentRound.setFighter1Attacked(true);
                     if (opponent.getHealth() <= aggressor.getAttackPower()) {
@@ -160,14 +166,15 @@ public class SimpleBattleManagerImpl implements SimpleBattleManager {
                         fightOver.set(true);
                     } else {
                         opponent.setHealth(opponent.getHealth() - aggressor.getAttackPower());
-                        LOGGER.debug("{} remaining hp is {}", opponent.getName(), opponent.getHealth());
+                        LandedHitEvent event = new LandedHitEvent(opponent.getName(), origHealth, opponent.getHealth());
+                        aggressor.onLandedHit(event);
                     }
                 }
 
             } else {
 
                 if (!currentRound.isFighter2Attacked()) {
-                    LOGGER.debug("{} is hitting {}.", aggressor.getName(), opponent.getName());
+                    int origHealth = opponent.getHealth();
 
                     currentRound.setFighter2Attacked(true);
                     if (opponent.getHealth() <= aggressor.getAttackPower()) {
@@ -178,7 +185,9 @@ public class SimpleBattleManagerImpl implements SimpleBattleManager {
                         fightOver.set(true);
                     } else {
                         opponent.setHealth(opponent.getHealth() - aggressor.getAttackPower());
-                        LOGGER.debug("{} remaining hp is {}", opponent.getName(), opponent.getHealth());
+
+                        LandedHitEvent event = new LandedHitEvent(opponent.getName(), origHealth, opponent.getHealth());
+                        aggressor.onLandedHit(event);
                     }
                 }
 
@@ -194,13 +203,16 @@ class RoundContext {
 
     private volatile AtomicBoolean fighter2Attacked = new AtomicBoolean(false);
 
+    private volatile AtomicInteger counter = new AtomicInteger(0);
+
     public synchronized boolean isFighter1Attacked() {
         return fighter1Attacked.get();
     }
 
     public void reset() {
-        fighter1Attacked.set(false);
-        fighter2Attacked.set(false);
+        setFighter1Attacked(false);
+        setFighter2Attacked(false);
+        setCounter(-1);
 
     }
 
@@ -214,6 +226,14 @@ class RoundContext {
 
     public synchronized void setFighter2Attacked(boolean fighter2Attacked) {
         this.fighter2Attacked.set(fighter2Attacked);
+    }
+
+    public synchronized int getCounter() {
+        return counter.get();
+    }
+
+    public synchronized void setCounter(int counter) {
+        this.counter.set(counter);
     }
 
     @Override

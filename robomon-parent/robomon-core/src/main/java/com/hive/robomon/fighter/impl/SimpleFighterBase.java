@@ -1,11 +1,17 @@
 package com.hive.robomon.fighter.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hive.robomon.battle.BattleManager;
 import com.hive.robomon.battle.SimpleBattleManager;
+import com.hive.robomon.event.LandedHitEvent;
 import com.hive.robomon.fighter.FightingType;
 
 public abstract class SimpleFighterBase implements SimpleFighter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleFighterBase.class);
 
     private String name;
 
@@ -24,6 +30,12 @@ public abstract class SimpleFighterBase implements SimpleFighter {
         this.health = health;
         this.type = type;
         this.attackPower = attackPower;
+    }
+
+    @Override
+    public void onLandedHit(LandedHitEvent event) {
+        LOGGER.trace("Landed a hit on {} for {} hit points.", event.getTargetName(), event.getTargetOldHealth() - event.getTargetNewHealth());
+
     }
 
     @Override
@@ -46,10 +58,12 @@ public abstract class SimpleFighterBase implements SimpleFighter {
         this.health = health;
     }
 
+    @Override
     public int getAttackPower() {
         return attackPower;
     }
 
+    @Override
     public void setAttackPower(int attackPower) {
         this.attackPower = attackPower;
     }
